@@ -1,5 +1,5 @@
 {
-  "name": "browser-extension",
+  "name": "osu-direct-browser-extension",
   "version": "1.0.0",
   "scripts": {
     "clean": "rimraf dist build dist-build chrome.zip firefox.zip",

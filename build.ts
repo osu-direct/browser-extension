@@ -20,12 +20,15 @@ async function zipDir(src: string, out: string): Promise<void> {
   console.log("✅ Built", out);
 }
 
-async function getVersion(): Promise<string> {
+async function getMetadata(): Promise<{ name: string; version: string }> {
   const pkg = await fs.readJson("package.json");
-  return pkg.version || "0.0.0";
+  return {
+    name: pkg.name || "",
+    version: pkg.version || "0.0.0",
+  };
 }
 
-async function buildChrome(version: string): Promise<void> {
+async function buildChrome(name: string, version: string): Promise<void> {
   const outDir = path.join(BUILD, "chrome");
   await fs.remove(outDir);
   await fs.mkdirp(outDir);
@@ -41,10 +44,10 @@ async function buildChrome(version: string): Promise<void> {
 
   await fs.writeJson(manifestPath, manifest, { spaces: 2 });
 
-  await zipDir(outDir, path.join(RELEASE, `chrome-v${version}.zip`));
+  await zipDir(outDir, path.join(RELEASE, `${name}-chrome-v${version}.zip`));
 }
 
-async function buildFirefox(version: string): Promise<void> {
+async function buildFirefox(name: string, version: string): Promise<void> {
   const outDir = path.join(BUILD, "firefox");
   await fs.remove(outDir);
   await fs.mkdirp(outDir);
@@ -60,32 +63,38 @@ async function buildFirefox(version: string): Promise<void> {
 
   if (manifest.background?.service_worker) {
     manifest.background = {
-      scripts: [manifest.background.service_worker]
+      scripts: [manifest.background.service_worker],
     };
   }
 
   await fs.writeJson(manifestPath, manifest, { spaces: 2 });
 
-  await zipDir(outDir, path.join(RELEASE, `firefox-v${version}.zip`));
+  await zipDir(outDir, path.join(RELEASE, `${name}-firefox-v${version}.zip`));
 }
 
 async function main(): Promise<void> {
-  const version = await getVersion();
+  const metadata = await getMetadata();
 
-  console.log("📦 Building extension version", version);
+  console.log(
+    "📦 Building ",
+    metadata.name,
+    "extension version",
+    metadata.version,
+    "...",
+  );
 
   await fs.remove(BUILD);
   await fs.remove(RELEASE);
   await fs.mkdirp(BUILD);
   await fs.mkdirp(RELEASE);
 
-  await buildChrome(version);
-  await buildFirefox(version);
+  await buildChrome(metadata.name, metadata.version);
+  await buildFirefox(metadata.name, metadata.version);
 
   console.log("✅ Done → release/");
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
