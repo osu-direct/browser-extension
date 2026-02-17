@@ -3,7 +3,7 @@ chrome.runtime.onMessage.addListener(async (msg, sender) => {
   const tabId = sender.tab?.id;
   if (!tabId) return;
 
-  const url = `https://osu.direct/d/${msg.id}`;
+  const url = `https://osu.direct/api/d/${msg.id}`;
 
   try {
     const response = await fetch(url);
